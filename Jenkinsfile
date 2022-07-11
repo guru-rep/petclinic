@@ -41,7 +41,7 @@ spec:
   stages {
     stage('Run maven') {
       steps {
-          git(url:'https://github.com/cloudbees-guru/petclinic', credentialsId: 'github-cloudbees-guru')
+          git(url:'https://github.com/guru-rep/petclinic', credentialsId: 'github-cloudbees-guru')
           container('maven') {
             withMaven(
                       mavenSettingsConfig: 'maven-general',
