@@ -32,10 +32,10 @@ spec:
   }
 
   environment {
-    NEXUS_INSTANCE = "Nexus_CloudBees_Guru"
-    NEXUS_REPOSITORY = "shared-demos"
-    ROLLOUT_APP_TOKEN = "$ROLLOUT_APP_TOKEN"
-    ROLLOUT_USER_TOKEN = "$ROLLOUT_USER_TOKEN"
+     NEXUS_INSTANCE = "$NEXUS_INSTANCE"
+     NEXUS_REPOSITORY = "$NEXUS_REPO"
+     ROLLOUT_APP_TOKEN = "$ROLLOUT_APP_TOKEN"
+     ROLLOUT_USER_TOKEN = "$ROLLOUT_USER_TOKEN"
   }
 
   stages {
@@ -44,7 +44,7 @@ spec:
           git(url:'https://github.com/cloudbees-guru/petclinic', credentialsId: 'github-cloudbees-guru')
           container('maven') {
             withMaven(
-                      mavenSettingsConfig: '4123d3ce-22c2-477d-83d7-623049473250',
+                      mavenSettingsConfig: 'maven-general',
                       options: [junitPublisher(disabled: true, healthScaleFactor: 1.0)],
                       publisherStrategy: 'EXPLICIT') {
               sh 'mvn clean verify'
@@ -52,7 +52,7 @@ spec:
           }
       }
     }
-    stage('SonarQube analysis') {
+   /*  stage('SonarQube analysis') {
       steps {
           container('maven') {
             withSonarQubeEnv('SonarQube CloudBees Guru') {
@@ -65,7 +65,7 @@ spec:
             }
           }
       }
-    }
+    } */
     stage('Publish to Nexus') {
       steps {
           container('maven') {
@@ -89,33 +89,33 @@ spec:
           }
       }
     }
-    stage('Feature flag usage check') {
-      steps {
-          container('maven') {
-            script {
-              sh """
-               curl -o file.json \"https://x-api.rollout.io/public-api/applications/${ROLLOUT_APP_TOKEN}/Production/experiments" -H "accept: application/json" -H "Authorization: Bearer ${ROLLOUT_USER_TOKEN}"''
-               cat file.json | sed -e 's/},/},\\n/g' > file.json.new
-              """
-              ALLEXP = sh (
-                  script: 'cat file.json.new | grep value | wc -l',
-                  returnStdout: true
-              ).trim()
-              echo "All experiments: ${ALLEXP}"
-              KILLEDEXP = sh (
-                  script: 'cat file.json.new | grep enabled.*false | wc -l',
-                  returnStdout: true
-              ).trim()
-              echo "Inactive experiments: ${KILLEDEXP}"
-            }
-          }
-      }
-    }
-    stage('Trigger CloudBees CD pipeline') {
-      steps {
-        cloudBeesFlowRunPipeline addParam: '{"pipeline":{"pipelineName":"spring-petclinic - Demo pipeline","parameters":"[{\\"parameterName\\": \\"applicationVersion\\", \\"parameterValue\\": \\"2.4.5\\"}]"}}', configuration: 'CloudBees Guru CD', pipelineName: 'spring-petclinic - Demo pipeline', projectName: 'Shared demos'
-      }
-    }
+//     stage('Feature flag usage check') {
+//       steps {
+//           container('maven') {
+//             script {
+//               sh """
+//                curl -o file.json \"https://x-api.rollout.io/public-api/applications/${ROLLOUT_APP_TOKEN}/Production/experiments" -H "accept: application/json" -H "Authorization: Bearer ${ROLLOUT_USER_TOKEN}"''
+//                cat file.json | sed -e 's/},/},\\n/g' > file.json.new
+//               """
+//               ALLEXP = sh (
+//                   script: 'cat file.json.new | grep value | wc -l',
+//                   returnStdout: true
+//               ).trim()
+//               echo "All experiments: ${ALLEXP}"
+//               KILLEDEXP = sh (
+//                   script: 'cat file.json.new | grep enabled.*false | wc -l',
+//                   returnStdout: true
+//               ).trim()
+//               echo "Inactive experiments: ${KILLEDEXP}"
+//             }
+//           }
+//       }
+//     }
+//     stage('Trigger CloudBees CD pipeline') {
+//       steps {
+//         cloudBeesFlowRunPipeline addParam: '{"pipeline":{"pipelineName":"spring-petclinic - Demo pipeline","parameters":"[{\\"parameterName\\": \\"applicationVersion\\", \\"parameterValue\\": \\"2.4.5\\"}]"}}', configuration: 'CloudBees Guru CD', pipelineName: 'spring-petclinic - Demo pipeline', projectName: 'Shared demos'
+//       }
+//     }
   }
 
   post {
